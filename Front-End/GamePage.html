@@ -104,6 +104,7 @@
         let isBetting = true;
         let isPlaying = false;
         var socket;
+        const cards = [];//array of strings representing the cards i currently have(gotten from the server when it passes in new cards)
 
         function connectToServer() {
             socket = new WebSocket("ws://");
@@ -111,6 +112,8 @@
             socket.onmessage = function (event) {
                 document.getElementById("test").innerHTML = "Received data from server";
                 //will have to change this
+
+                //if we are getting a card, get its string representation and add it to the cards array
             }
         }
 
@@ -160,6 +163,24 @@
             isPlaying = true;
             return sendBet();
         }
+        function endGame() {
+            window.location.replace("playAgain.html");
+        }
+
+        function addCard() {//asks the server to add a card
+            socket.send("Asking for card");//sends over a string asking for a card
+        }
+
+        function goThroughCards() {//goes through the cards and determines what cards to display 
+            let size = cards.length;
+            var myCard;
+            for (let i = 0; i < size; i++) {
+                myCard = cards[i];//gets the string of the cards i currently have
+                //have to create an image tag based on myCard
+            }
+
+        }
+
     </script>
 </head>
 <body onload="startPage()">
