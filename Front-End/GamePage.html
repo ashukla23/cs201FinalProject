@@ -114,18 +114,18 @@
             }
         }
 
-        function sendBet() {
+        function sendBet() {//sends the bet over to the server
 
             socket.send(myBet);
             document.getElementById("test").innerHTML = "Sent Bet";
             return false;
         }
 
-        function startPage() {
+        function startPage() {//called when the page is started
             document.getElementById("balance").innerHTML = "Balance: " + balance;
             document.getElementById("bet").innerHTML = "Bet: " + myBet;
         }
-        function bet(x) {
+        function bet(x) {//when the player bets a certain amount
             if (!isBetting) {
                 return false;
             }
@@ -142,7 +142,7 @@
             return false;
         }
 
-        function myReset() {
+        function myReset() {//resets the player's balance
             if (!isBetting) {
                 return false;
             }
@@ -155,7 +155,7 @@
 
         }
 
-        function startPlaying() {
+        function startPlaying() {//changes a couple of booleans to signify what state we are at now
             isBetting = false;
             isPlaying = true;
             return sendBet();
