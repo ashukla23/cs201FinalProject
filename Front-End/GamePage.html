@@ -138,6 +138,7 @@
         function startPage() {//called when the page is started
             document.getElementById("balance").innerHTML = "Balance: " + balance;
             document.getElementById("bet").innerHTML = "Bet: " + myBet;
+            gameSetup();
         }
         function bet(x) {//when the player bets a certain amount
             if (!isBetting) {
@@ -192,6 +193,83 @@
 
         }
 
+        // gameplay functionality implementation begins 
+
+        var dealerScore = 0;
+        var playerScore = 0; 
+
+        var overturned; 
+        var deck = ["A-C", "A-D", "A-H", "A-S", "2-C", "2-D", "2-H", "2-S","3-C", "3-D", "3-H", "3-S", "4-C", "4-D", "4-H", "4-S",
+                    "5-C", "5-D", "5-H", "5-S", "6-C", "6-D", "6-H", "6-S","7-C", "7-D", "7-H", "7-S", "8-C", "8-D", "8-H", "8-S",
+                    "9-C", "9-D", "9-H", "9-S", "10-C", "10-D", "10-H", "10-S","J-C", "J-D", "J-H", "J-S", "K-C", "K-D", "K-H", "K-S",
+                    "Q-C", "Q-D", "Q-H", "Q-S"]; 
+
+
+        window.onload = function() {
+
+            gameSetup();
+        }
+
+        function getPoints(card) { // get number value of card 
+            let data = card.split("-"); 
+            let cardNumber = data[0];
+
+            if (cardNumber == "A") {
+                return 11;
+            }
+            else if (cardNumber == "J" || cardNumber == "K" || cardNumber == "Q") {
+                return 10;
+            }
+            else {
+                return parseInt(cardNumber);
+            }
+        }
+
+        function gameSetup() {
+            overturned = deck.pop();
+            dealerScore += getPoints(overturned);
+            while (dealerScore <= 17) {
+                let image = document.createElement("img");
+                let currentCard = deck.pop();
+                image.src = "./images/" + currentCard + ".png";
+                dealerScore += getPoints(currentCard);
+                document.getElementById("card-dealer").append(image);
+            }
+
+            for (let i = 0; i < 2; i++) {
+                let image = document.createElement("img");
+                let yourCard = deck.pop();
+                image.src = "./images/" + yourCard + ".png";
+                playerScore += getValue(yourCard);
+                document.getElementById("card-player").append(image);
+            }
+
+
+            document.getElementById("hit").addEventListener("click", hit);
+            document.getElementById("stay").addEventListener("click", stay);
+        }
+
+        function hit() {
+            if (playerScore > 21) {
+                return;
+            }
+            let image = document.createElement("img");
+            let currentCard = deck.pop();
+            image.src = "./images/" + currentCard + ".png";
+            playerScore += getPoints(currentCard);
+            document.getElementById("card-player").append(image);
+
+            
+
+
+        }
+
+        function stay() {
+            document.getElementById("hidden").src = "./images/" + overturned + ".png";
+            document.getElementById("dealer-sum").innerText = dealerSum;
+            document.getElementById("your-sum").innerText = yourSum;
+        }
+
     </script>
 </head>
 <body onload="startPage()">
@@ -202,13 +280,15 @@
         <!-- Card images from https://code.google.com/archive/p/vector-playing-cards/ -->
         <h3>Dealer Cards: </h3>
         <div id="card-dealer">
-            <img id="2-C" src="./images/2_of_clubs.png">
+            <img id="overturned" src="./images/2-C.png">
         </div>
         <br />
         <h3>Player Cards: </h3>
         <div id="card-player">
-            <img id="2-C" src="./images/2_of_clubs.png">
         </div>
+        <br />
+        <button id="hit" type="button" onclick="hit()">Hit</button>
+        <button id="stay" type="button" onclick="stay()">Stay</button>
         <br />
         <form>
             <div class="container">
