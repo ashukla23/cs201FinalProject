@@ -1,31 +1,34 @@
 package csci201_groupProject;
 
 import java.io.BufferedReader;
+
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
 import java.net.Socket;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.concurrent.TimeUnit;
+
 
 
 
 
 public class ServerThread extends Thread {
 	
+	//server stuff
 	private Socket socket;
 	private PrintWriter printWriter;
 	private BufferedReader bufferedReader;
-	private boolean done;
-	private volatile boolean activeThread;
+	
+	//integers
 	private int sum;
 	private int balance;
 	private int bet;
+	
+	//booleans
+	private volatile boolean activeThread;
+	private boolean done;
 	private boolean betting;
 	private boolean playing;
+	private boolean wantsCard;
 	//private SET CARDS:
 	
 	
@@ -35,6 +38,8 @@ public class ServerThread extends Thread {
 		playing = false;
 		activeThread = true;
 		sum = 0;
+		bet = 0;
+		wantsCard = false;
 		
 		
 		try {
@@ -51,6 +56,7 @@ public class ServerThread extends Thread {
 	/*public void addCard(Card c) {
 		cards.add(c);
 		sum += c.getValue();
+		wantsCard = false;
 	}*/
 	
 	public boolean getDone() {
@@ -126,6 +132,10 @@ public class ServerThread extends Thread {
 		return sum;
 	}
 	
+	public boolean wantsCard() {
+		return wantsCard;
+	}
+	
 	
 	public void run() {
 		
@@ -185,6 +195,11 @@ public class ServerThread extends Thread {
 					if(betString == "H") {
 						move = true;
 						//get a card, new function?
+						wantsCard = true;
+						//loop until the card has been given
+						while(wantsCard) {
+							
+						}
 					} else if(betString == "S") {
 						move = true;
 						playing = false;

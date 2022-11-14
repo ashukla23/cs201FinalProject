@@ -1,13 +1,11 @@
 package csci201_groupProject;
 
-import java.awt.image.PixelInterleavedSampleModel;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.swing.LookAndFeel;
 
 
 public class ServerClass {
@@ -134,12 +132,21 @@ public class ServerClass {
 				}
 				
 				
+				//loop through all the players until they are done playing
 				int playersDone = 0;
 				while(playersDone < players.size()) {
 					playersDone = 0;
+					
 					for(int i = 0; i < players.size(); i++) {
+						//if the player is not playing add to sum
 						if(!players.get(i).getPlaying()) {
 							playersDone++;
+							
+						} else {
+							//if playing and wants card
+							if(players.get(i).wantsCard()) {
+								//give them a card
+							}
 						}
 					}
 				}	
