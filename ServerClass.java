@@ -144,7 +144,7 @@ public class ServerClass {
 					}
 				}	
 			
-			
+				//check player win/loss and reset the player threads
 				for(int i = 0; i < players.size(); i++) {
 					if(players.get(i).getSum() >= dealerSum && players.get(i).getSum() <= 21) {
 						players.get(i).sendMessage("You won " + players.get(i).getBet());
