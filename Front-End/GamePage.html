@@ -119,12 +119,18 @@
         const cards = [];//array of strings representing the cards i currently have(gotten from the server when it passes in new cards)
 
         function connectToServer() {
-            socket = new WebSocket("ws://localhost:8080/ws");
+            socket = new WebSocket("ws://localhost:12345/CSCI_201_FinalProject/ws");//might have to change the url(look in the websockets presentation)
             //change the url
-            socket.onmessage = function (event) {
-                document.getElementById("test").innerHTML = "Received data from server";
-                //will have to change this
+            socket.onmessage = function (event) { //when we receive something  from the server
+                document.getElementById("test").innerHTML = "Received data from server "+event.data; 
+                //will have to change this based on what we receive from the server
+                if (event.data.type == "string") {//if the type is a string
 
+                }
+                else {//must be the balance
+                    balance = event.data;
+                }
+                
                 //if we are getting a card, get its string representation and add it to the cards array
             }
         }
@@ -137,6 +143,7 @@
         }
 
         function startPage() {//called when the page is started
+            connectToServer();
             document.getElementById("balance").innerHTML = "Balance: " + balance;
             document.getElementById("bet").innerHTML = "Bet: " + myBet;
             gameSetup();
