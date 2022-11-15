@@ -6,8 +6,11 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Vector;
+import javax.websocket.*; // for space
+import javax.websocket.server.ServerEndpoint;
 
-
+@ServerEndpoint (value="/ws")//don't change this
 public class ServerClass extends Thread {
 	
 	private int connections;
@@ -15,6 +18,7 @@ public class ServerClass extends Thread {
 	private ServerSocket server;
 	private Socket socket;
 	private boolean inGame;
+	private static Vector<Session> mySessions = new Vector<Session>();
 	
 	//Synchronised list of client threads
 	List<ServerThread> players = Collections.synchronizedList(new ArrayList<ServerThread>());
@@ -35,7 +39,7 @@ public class ServerClass extends Thread {
 				
 			
 				
-				
+		/*		
 		try {
 			server = new ServerSocket(port);
 					
@@ -165,17 +169,44 @@ public class ServerClass extends Thread {
 						
 								
 			}			
+		}*/
+	}
+	
+
+	//for web Sockets connections/we don't have to use serverthreads
+
+	@OnOpen
+	public void open(Session session) {
+		System.out.println("Connection made");
+		mySessions.add(session);
+	}
+	
+	@OnMessage
+	public void message(String message, Session session) {
+		System.out.println(message);
+		try {
+			session.getBasicRemote().sendText("You sent a message");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
-	public static void main(String[] args) {
-		
-		ServerClass serverClass = new ServerClass();
-		
+	@OnClose
+	public void close(Session session) {
+		System.out.println("Disconnecting");
+		mySessions.remove(session);
 	}
+
+	
+	//public static void main(String[] args) {
+		
+		//ServerClass serverClass = new ServerClass();
+		
+	//}
 	
 	
-	public void run() {
+	/*public void run() {
 		//look for new connections
 		
 		while(connections < 4) {
@@ -206,5 +237,5 @@ public class ServerClass extends Thread {
 			} catch (Exception e) {
 			}
 		}
-	}
+	}*/
 }
