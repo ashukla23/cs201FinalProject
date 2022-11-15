@@ -103,6 +103,7 @@
             width: 250px;
             margin: 5px;
         }
+
         #card-player img {
             height: 363px;
             width: 250px;
@@ -118,7 +119,7 @@
         const cards = [];//array of strings representing the cards i currently have(gotten from the server when it passes in new cards)
 
         function connectToServer() {
-            socket = new WebSocket("ws://");
+            socket = new WebSocket("ws://localhost:8080/ws");
             //change the url
             socket.onmessage = function (event) {
                 document.getElementById("test").innerHTML = "Received data from server";
@@ -129,8 +130,8 @@
         }
 
         function sendBet() {//sends the bet over to the server
-
-            socket.send(myBet);
+            var newBet = "" + myBet;
+            socket.send(newBet);
             document.getElementById("test").innerHTML = "Sent Bet";
             return false;
         }
@@ -163,8 +164,8 @@
             }
             balance += myBet;
             myBet = 0;
-            document.getElementById("balance").innerHTML = "Balance: "+balance;
-            document.getElementById("bet").innerHTML = "Bet: "+myBet;
+            document.getElementById("balance").innerHTML = "Balance: " + balance;
+            document.getElementById("bet").innerHTML = "Bet: " + myBet;
             document.getElementById("error").innerHTML = "Your balance has been reset";
             return false;
 
@@ -183,7 +184,7 @@
             socket.send("Asking for card");//sends over a string asking for a card
         }
 
-        function goThroughCards() {//goes through the cards and determines what cards to display 
+        function goThroughCards() {//goes through the cards and determines what cards to display
             let size = cards.length;
             var myCard;
             for (let i = 0; i < size; i++) {
@@ -193,25 +194,25 @@
 
         }
 
-        // gameplay functionality implementation begins 
+        // gameplay functionality implementation begins
 
         var dealerScore = 0;
-        var playerScore = 0; 
+        var playerScore = 0;
 
-        var overturned; 
-        var deck = ["A-C", "A-D", "A-H", "A-S", "2-C", "2-D", "2-H", "2-S","3-C", "3-D", "3-H", "3-S", "4-C", "4-D", "4-H", "4-S",
-                    "5-C", "5-D", "5-H", "5-S", "6-C", "6-D", "6-H", "6-S","7-C", "7-D", "7-H", "7-S", "8-C", "8-D", "8-H", "8-S",
-                    "9-C", "9-D", "9-H", "9-S", "10-C", "10-D", "10-H", "10-S","J-C", "J-D", "J-H", "J-S", "K-C", "K-D", "K-H", "K-S",
-                    "Q-C", "Q-D", "Q-H", "Q-S"]; 
+        var overturned;
+        var deck = ["A-C", "A-D", "A-H", "A-S", "2-C", "2-D", "2-H", "2-S", "3-C", "3-D", "3-H", "3-S", "4-C", "4-D", "4-H", "4-S",
+            "5-C", "5-D", "5-H", "5-S", "6-C", "6-D", "6-H", "6-S", "7-C", "7-D", "7-H", "7-S", "8-C", "8-D", "8-H", "8-S",
+            "9-C", "9-D", "9-H", "9-S", "10-C", "10-D", "10-H", "10-S", "J-C", "J-D", "J-H", "J-S", "K-C", "K-D", "K-H", "K-S",
+            "Q-C", "Q-D", "Q-H", "Q-S"];
 
 
-        window.onload = function() {
+        window.onload = function () {
 
             gameSetup();
         }
 
-        function getPoints(card) { // get number value of card 
-            let data = card.split("-"); 
+        function getPoints(card) { // get number value of card
+            let data = card.split("-");
             let cardNumber = data[0];
 
             if (cardNumber == "A") {
@@ -250,6 +251,7 @@
         }
 
         function hit() {
+            socket.send("H");
             if (playerScore > 21) {
                 return;
             }
@@ -259,12 +261,13 @@
             playerScore += getPoints(currentCard);
             document.getElementById("card-player").append(image);
 
-            
+
 
 
         }
 
         function stay() {
+            socket.send("S");
             document.getElementById("hidden").src = "./images/" + overturned + ".png";
             document.getElementById("dealer-sum").innerText = dealerSum;
             document.getElementById("your-sum").innerText = yourSum;
