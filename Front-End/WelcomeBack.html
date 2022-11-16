@@ -88,20 +88,35 @@
              width: 100%;
           }
         }
-        </style>
+        </style><script>
+        var name;
+        var balance;
+        function onLoad(){
+        	const myUrl = window.location.search;
+        	const urlParams = new URLSearchParams(myUrl);
+        	name = urlParams.get('name');
+        	document.getElementById("WelcomeBack").innerHTML = "Welcome back "+name+"!";
+        	balance = urlParams.get('balance');
+        	document.getElementById("Balance").innerHTML = "Current Balance: "+balance;
+        	document.getElementById("myBalance").value = balance;
+        	document.getElementById("name").value = name;
+        }
+        </script>
         </head>
-        <body>
+        <body onload ="onLoad()">
         <div id="WholeContainer">
         <h2>Blackjack</h2>
         <h3>Welcome To Blackjack</h3>
-        <h4>Welcome back, username!</h4>
-        <form action="/action_page.php" method="post">
+        <h4 id = "WelcomeBack">Welcome back, !</h4>
+        <form action="GoToGame" method="GET">
         <div class="container">
             <button type="submit">Start Game</button>
         </div>
+        <input type="hidden" name="balance" id = "myBalance" value = ""/>
+        <input type="hidden" name="username" id = "name" value = ""/>
         </form>
-        <label>
-            Current Balance: 1000
+        <label id = "Balance">
+            Current Balance: 
         </label>
         <br>
         <label>

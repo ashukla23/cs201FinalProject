@@ -111,7 +111,8 @@
         }
     </style>
     <script>
-        let balance = 100;
+        var balance = 0;
+        var name = "";
         let myBet = 0;
         let isBetting = true;
         let isPlaying = false;
@@ -143,6 +144,10 @@
         }
 
         function startPage() {//called when the page is started
+            const myUrl = window.location.search;
+        	const urlParams = new URLSearchParams(myUrl);
+        	balance = urlParams.get('balance');
+            name = urlParams.get('name');
             connectToServer();
             document.getElementById("balance").innerHTML = "Balance: " + balance;
             document.getElementById("bet").innerHTML = "Bet: " + myBet;
