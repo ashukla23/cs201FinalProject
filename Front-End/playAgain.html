@@ -101,6 +101,10 @@ function logOut(){
 	window.location.replace("index.html");
 }
 function setup(){
+    const myUrl = window.location.search;
+    const urlParams = new URLSearchParams(myUrl);
+    balance = urlParams.get('balance');
+    name = urlParams.get('name');
 	document.getElementById("message").innerHTML = "Thank you for playing, "+name+"!";
 	document.getElementById("finalBalance").innerHTML = "Your end-of-game balance is "+balance;
 }

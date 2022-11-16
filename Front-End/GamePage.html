@@ -189,7 +189,7 @@
             return sendBet();
         }
         function endGame() {
-            window.location.replace("playAgain.html");
+            window.location.replace("playAgain.html?name="+name+"&balance="+balance);
         }
 
         function addCard() {//asks the server to add a card
