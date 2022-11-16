@@ -137,9 +137,17 @@
         }
 
         function sendBet() {//sends the bet over to the server
+            if(myBet == 0){
+        		alert("Leaving Game since no bet made.");
+        		endGame();
+        	}
             var newBet = "" + myBet;
             socket.send(newBet);
             document.getElementById("test").innerHTML = "Sent Bet";
+            element = document.getElementById("betting");
+            element.hidden = true;
+            buttons = document.getElementById("buttons");
+            buttons.hidden = false;
             return false;
         }
 
@@ -302,10 +310,12 @@
         <div id="card-player">
         </div>
         <br />
-        <button id="hit" type="button" onclick="hit()">Hit</button>
-        <button id="stay" type="button" onclick="stay()">Stay</button>
+        <div id = "buttons" hidden = "true">
+            <button id="hit" type="button" onclick="hit()">Hit</button>
+            <button id="stay" type="button" onclick="stay()">Stay</button>
+        </div>
         <br />
-        <form>
+        <form id = "betting">
             <div class="container">
                 <button type="button" onclick="bet(10)">Bet 10</button>
                 <button type="button" onclick="bet(50)">Bet 50</button>
