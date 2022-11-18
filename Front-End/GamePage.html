@@ -117,13 +117,57 @@
         let isBetting = true;
         let isPlaying = false;
         var socket;
+        var serverID = "";
         const cards = [];//array of strings representing the cards i currently have(gotten from the server when it passes in new cards)
+        var dealerCards = [];
+        var message = "";
 
+        
         function connectToServer() {
             socket = new WebSocket("ws://localhost:12345/CSCI_201_FinalProject/ws");//might have to change the url(look in the websockets presentation)
             //change the url
             socket.onmessage = function (event) { //when we receive something  from the server
                 document.getElementById("test").innerHTML = "Received data from server "+event.data; 
+                message = event.data;
+
+                if (!isNaN(message)) {
+                    if (Number(message) >= 0 && Number(message) < 4) {
+                        serverID = message;
+                    }
+                }
+                else {
+                    if (message[1] == "L") { // server signals balance update
+
+                    }
+                    else if (message[0] == "D") { // server signals dealer hand update -- dealer hand update will always be a set of multiple cards 
+                        var newcards = message.substring(1).split(1);
+                        for (let i=0; i < cards.size(); i++) {
+                            dealerCards.append(newcards[i]);
+                            let image = document.createElement("img");
+                            let currentCard = newcards[i];
+                            image.src = "./images/" + currentCard + ".png";
+                            document.getElementById("card-player").append(image);
+                        }
+
+
+                    }
+                    else if (message[0] == "P") { // server signals player hand update
+                        var newcards = message.substring(1).split(",");
+                        for (let i=0; i < cards.size(); i++) {
+                            cards.append(newcards[i]);
+
+                        }
+
+
+                    }
+                    else if (message[0] == "W") { // server signals player win -- TODO
+
+                    }
+                    else if (message[0] == "L") { // server signals player loss --  TODO 
+
+                    }
+                }
+
                 //will have to change this based on what we receive from the server
                 if (event.data.type == "string") {//if the type is a string
 
@@ -142,7 +186,7 @@
         		endGame();
         	}
             var newBet = "" + myBet;
-            socket.send(newBet);
+            socket.send(serverID + "B " + newBet);
             document.getElementById("test").innerHTML = "Sent Bet";
             element = document.getElementById("betting");
             element.hidden = true;
@@ -151,7 +195,7 @@
             return false;
         }
 
-        function startPage() {//called when the page is started
+        function startPage() { //called when the page is started
             const myUrl = window.location.search;
         	const urlParams = new URLSearchParams(myUrl);
         	balance = urlParams.get('balance');
@@ -161,7 +205,7 @@
             document.getElementById("bet").innerHTML = "Bet: " + myBet;
             gameSetup();
         }
-        function bet(x) {//when the player bets a certain amount
+        function bet(x) { //when the player bets a certain amount
             if (!isBetting) {
                 return false;
             }
@@ -191,7 +235,7 @@
 
         }
 
-        function startPlaying() {//changes a couple of booleans to signify what state we are at now
+        function startPlaying() { //changes a couple of booleans to signify what state we are at now
             isBetting = false;
             isPlaying = true;
             return sendBet();
@@ -256,15 +300,11 @@
         }
 
         function hit() {
-            socket.send("H");
+            socket.send(serverID + "H");
             if (playerScore > 21) {
                 return;
             }
-            let image = document.createElement("img");
-            let currentCard = deck.pop();
-            image.src = "./images/" + currentCard + ".png";
-            playerScore += getPoints(currentCard);
-            document.getElementById("card-player").append(image);
+
 
 
 
@@ -272,11 +312,18 @@
         }
 
         function stay() {
-            socket.send("S");
+            socket.send(serverID + "S");
             document.getElementById("hidden").src = "./images/" + overturned + ".png";
             document.getElementById("dealer-sum").innerText = dealerSum;
             document.getElementById("your-sum").innerText = yourSum;
         }
+
+
+        function joinGame() {
+            socket.send("RU " + name); // send "R", onmessage will process client ID. 
+
+        }
+
 
     </script>
 </head>
