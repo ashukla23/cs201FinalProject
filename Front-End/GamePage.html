@@ -129,7 +129,7 @@
 
                 }
                 else {//must be the balance
-                    balance = event.data;
+                    //balance = event.data;
                 }
                 
                 //if we are getting a card, get its string representation and add it to the cards array
@@ -199,21 +199,6 @@
         function endGame() {
             window.location.replace("playAgain.html?name="+name+"&balance="+balance);
         }
-
-        function addCard() {//asks the server to add a card
-            socket.send("Asking for card");//sends over a string asking for a card
-        }
-
-        function goThroughCards() {//goes through the cards and determines what cards to display
-            let size = cards.length;
-            var myCard;
-            for (let i = 0; i < size; i++) {
-                myCard = cards[i];//gets the string of the cards i currently have
-                //have to create an image tag based on myCard
-            }
-
-        }
-
         // gameplay functionality implementation begins
 
         var dealerScore = 0;
@@ -310,7 +295,7 @@
         <div id="card-player">
         </div>
         <br />
-        <div id = "buttons" hidden = "true">
+        <div id = "buttons" hidden="true">
             <button id="hit" type="button" onclick="hit()">Hit</button>
             <button id="stay" type="button" onclick="stay()">Stay</button>
         </div>

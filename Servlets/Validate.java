@@ -1,5 +1,3 @@
-
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -15,16 +13,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Servlet implementation class GoToGame
+ * Servlet implementation class Validate
  */
-@WebServlet("/GoToGame")
-public class GoToGame extends HttpServlet {
+@WebServlet("/Validate")
+public class Validate extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public GoToGame() {
+    public Validate() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -44,38 +42,36 @@ public class GoToGame extends HttpServlet {
 		// TODO Auto-generated method stub
 		doGet(request, response);
 	}
-	
 	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
 		
 		PrintWriter out = response.getWriter();
-		//System.out.println(username+" "+password);
-		//String username = request.getParameter("username");
-		//String balance = request.getParameter("balance");
 		
-			//response.sendRedirect("/CSCI_201_FinalProject/GamePage.html?name="+username+"&balance="+balance);
-		
-		
-		//System.out.println("WE made it");
-		//if(fieldToValidate != null && fieldToValidate.equals("LoginUsername") && fieldToValidate != null && fieldToValidate.equals("password")) {
-			String username = request.getParameter("LoginUsername");
-			String password = request.getParameter("LoginPassword");
+			String username = request.getParameter("CreateAccount_Username");
+			String password = request.getParameter("CreateAccount_Password");
 			Connection conn = null;
 			Statement st = null;
 			ResultSet rs = null;
-			String Password = "";
-			System.out.println(password);
-			int balance = 0;
 			try {
 				Class.forName("com.mysql.jdbc.Driver"); 
 				conn = DriverManager.getConnection("jdbc:mysql://localhost/blackjack?user=root&password=root"); 
 				st = conn.createStatement();
 				//retreiving password DATA
-				rs = st.executeQuery("SELECT blackjack.usernameandpassword.Password, blackjack.usernameandpassword.Balance FROM blackjack.usernameandpassword WHERE blackjack.usernameandpassword.Username = '"+ username +"';");
-				while (rs.next()) {
-					Password = rs.getString(1);
-					balance = rs.getInt(2);
+				String query = "SELECT blackjack.usernameandpassword.Username FROM blackjack.usernameandpassword WHERE blackjack.usernameandpassword.Username = '"+ username +"';";
+				
+				rs = st.executeQuery(query);
+				int i = 0;
+				while(rs.next()) {
+					i++;
 				}
+				if(i > 0 ) {//username is taken
+					response.sendRedirect("/CSCI_201_FinalProject/NewAccount.html?taken=yes");
+				}
+				else {//new user
+					String newquery = "INSERT INTO usernameandpassword (Username, Password, Balance) VALUES ('"+username+"', '"+password+"', 1500);";
+					st.executeUpdate(newquery);
+					response.sendRedirect("/CSCI_201_FinalProject/WelcomeBack.html?name="+username+"&balance=1500");
+				}
+				
 			}
 			catch (SQLException sql_e) {
 				System.out.println (sql_e.getMessage()); 
@@ -100,16 +96,12 @@ public class GoToGame extends HttpServlet {
 				}
 			}
 			//check if the password that the unser inputs and the password in the SQL Table match
-			if(password.compareTo(Password) == 0) {
-				response.sendRedirect("/CSCI_201_FinalProject/WelcomeBack.html?name="+username+"&balance="+balance);
-			}
-			else {
-				//alert("Invalid Password/Username Combination");
-				response.sendRedirect("/CSCI_201_FinalProject/WelcomeBack.html?name=Guest&balance=1000");
-			}
-		}
-
+			//if(password.compareTo(Password) == 0) {
+				//response.sendRedirect("/CSCI_201_FinalProject/GamePage.html?name="+username+"&balance="+1000);
+			//}
+			//else {
+				out.println("Invalid Password/Username Combination");
+			//}
 		
-	//}
-
+	}
 }
