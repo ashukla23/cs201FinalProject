@@ -1,4 +1,4 @@
-package csci201_groupProject;
+//package csci201_groupProject;
 
 
 import java.net.ServerSocket;
@@ -10,7 +10,198 @@ import java.util.Vector;
 import javax.websocket.*; // for space
 import javax.websocket.server.ServerEndpoint;
 
+import org.apache.jasper.tagplugins.jstl.core.Remove;
+
+
 @ServerEndpoint (value="/ws")//don't change this
+public class ServerClass extends Thread {
+	
+	private int connections;
+	volatile private boolean inGame;
+	private boolean gettingBets;
+	private static Vector<PlayerClass> players = new Vector<PlayerClass>();
+	private static Vector<PlayerClass> waitingPlayers = new Vector<PlayerClass>();
+	
+	//Synchronised list of client threads
+	/*List<ServerThread> players = Collections.synchronizedList(new ArrayList<ServerThread>());
+	List<ServerThread> waitingPlayers = Collections.synchronizedList(new ArrayList<ServerThread>());*/
+	
+	
+	
+	//for web Sockets connections/we don't have to use serverthreads
+
+	@OnOpen
+	public void open(Session session) {
+		//System.out.println("Connection made");
+		PlayerClass temp = new PlayerClass(session);
+		players.add(temp);
+		
+		
+		if(!this.isAlive()) {
+			this.start();
+			players.add(session);
+		} else {
+			
+			if(connections < 3) {
+				connections++;
+			
+				if(gettingBets) {
+					players.add(temp);
+				} else {
+					
+					waitingPlayers.add(temp);
+				
+				}
+			}
+		}
+		
+		session.sendText(connections);
+	}
+		
+	@OnMessage
+	public void message(String message, Session session) {
+		//System.out.println(message);
+		try {
+			
+			int index = Integer.parseInt(message.substring(0, 1));
+			PlayerClass temp = players.get(index);
+			
+			String command = message.substring(1, 2);
+			
+			if(command.equals("L")) {
+				
+			} else if(command.equals("B")) {
+				int balance = Integer.parseInt(message.substring(2));
+				temp.setBalance(balance);
+				
+			} else if(command.equals("U")) {
+				int bet = Integer.parseInt(message.substring(2));
+				temp.setBalance(bet);
+				
+			} else if(command.equals("R")) {
+				//idk the point of this
+				
+			} else if(command.equals("H")) {
+				temp.Hit();
+				
+			} else if(command.equals("S")) {
+				temp.Stay();
+				
+			}/* else if(command.equals("C")) {
+				
+			}*/
+			
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+		}
+	}
+		
+	@OnClose
+	public void close(Session session) {
+		//System.out.println("Disconnecting");
+		
+		//mySessions.remove(session);
+		
+		//Remove from players
+		for(int i = 0; i < players.size(); i++) {
+			if(session == players.get(i).getSession()) {
+				players.remove(i);
+			}
+		}
+		
+		connections--;
+	}
+	
+	@OnError
+	public void error(Throwable error) {
+		//System.out.println("Error!");
+	
+	}
+	
+	
+	public void run() {
+		connections = 0;
+		inGame = true;
+		
+		
+		
+		while(inGame) {
+			//betting
+			gettingBets = true;
+			
+			
+			players.addAll(waitingPlayers);
+			waitingPlayers.removeAllElements();
+			
+			for(int i = 0; i < players.size(); i++) {
+				players.get(i).bet();
+			}
+			
+			int betsMade = 0;
+			while(betsMade < players.size()) {
+				betsMade = 0;
+				for(int i = 0; i < players.size(); i++) {
+					if(players.get(i).betting()) {
+						betsMade++;
+					}
+				}
+			}
+			
+			gettingBets = false;
+			
+			
+			
+			
+			//use dealer
+			
+			
+			
+			//loop through all the players until they are done playing
+			int playersDone = 0;
+			while(playersDone < players.size()) {
+				playersDone = 0;
+						
+				for(int i = 0; i < players.size(); i++) {
+					//if the player is not playing add to sum
+					if(!players.get(i).getPlaying()) {
+						playersDone++;
+								
+					} else {
+						//if playing and wants card
+						if(players.get(i).wantsCard()) {
+							//give them a card
+						}
+					}
+				}
+			}
+			
+				
+			//check player win/loss and reset the player threads
+			for(int i = 0; i < players.size(); i++) {
+				if(players.get(i).getSum() >= dealerSum && players.get(i).getSum() <= 21) {
+					players.get(i).win();
+				} else {
+					players.get(i).loss();
+				}
+			}
+			
+			
+		}
+	}
+
+	
+}
+
+
+
+
+
+
+
+
+/*
 public class ServerClass extends Thread {
 	
 	private int connections;
@@ -18,7 +209,6 @@ public class ServerClass extends Thread {
 	private ServerSocket server;
 	private Socket socket;
 	private boolean inGame;
-	private static Vector<Session> mySessions = new Vector<Session>();
 	
 	//Synchronised list of client threads
 	List<ServerThread> players = Collections.synchronizedList(new ArrayList<ServerThread>());
@@ -39,7 +229,7 @@ public class ServerClass extends Thread {
 				
 			
 				
-		/*		
+				
 		try {
 			server = new ServerSocket(port);
 					
@@ -169,44 +359,17 @@ public class ServerClass extends Thread {
 						
 								
 			}			
-		}*/
-	}
-	
-
-	//for web Sockets connections/we don't have to use serverthreads
-
-	@OnOpen
-	public void open(Session session) {
-		System.out.println("Connection made");
-		mySessions.add(session);
-	}
-	
-	@OnMessage
-	public void message(String message, Session session) {
-		System.out.println(message);
-		try {
-			session.getBasicRemote().sendText("You sent a message");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 	
-	@OnClose
-	public void close(Session session) {
-		System.out.println("Disconnecting");
-		mySessions.remove(session);
+	public static void main(String[] args) {
+		
+		ServerClass serverClass = new ServerClass();
+		
 	}
-
-	
-	//public static void main(String[] args) {
-		
-		//ServerClass serverClass = new ServerClass();
-		
-	//}
 	
 	
-	/*public void run() {
+	public void run() {
 		//look for new connections
 		
 		while(connections < 4) {
@@ -237,5 +400,5 @@ public class ServerClass extends Thread {
 			} catch (Exception e) {
 			}
 		}
-	}*/
-}
+	}
+}*/
