@@ -94,17 +94,22 @@ span.psw {
 var name = "Guest";
 var balance = "1000";
 function playAgain(){
-	window.location.replace("GamePage.html?name="+name+"&balance="+balance);
+	document.getElementById("logout").value = "false";
+	//window.location.replace("GamePage.html?name="+name+"&balance="+balance);
 }
 function logOut(){
 	//send to sql if user is not a guest
-	window.location.replace("index.html");
+	document.getElementById("logout").value = "true";
+	//window.location.replace("index.html");
 }
 function setup(){
-    const myUrl = window.location.search;
-    const urlParams = new URLSearchParams(myUrl);
-    balance = urlParams.get('balance');
-    name = urlParams.get('name');
+	const myUrl = window.location.search;
+	const urlParams = new URLSearchParams(myUrl);
+	name = urlParams.get('name');
+	balance = urlParams.get('balance');
+	document.getElementById("myBalance").value = balance;
+	document.getElementById("name").value = name;
+	
 	document.getElementById("message").innerHTML = "Thank you for playing, "+name+"!";
 	document.getElementById("finalBalance").innerHTML = "Your end-of-game balance is "+balance;
 }
@@ -113,11 +118,16 @@ function setup(){
 <h2 id= "message">Thank you for playing, !</h2>
 <h3 id = "finalBalance">Your end-of-game balance is (INSERT BALANCE)</h3> 
 <!-- The following may become conditional depending on what we're going to do with players if they have no balance remaining.  -->
-
+<form action="BackToLogin" method="GET">
 <div class="container">
     <button type="submit" onclick="playAgain()">Play Again</button> <!-- Insert Action -->
     <button type="submit"onclick="logOut()">LOG OUT</button> <!-- Insert Action -->
 </div>
+<input type="hidden" name="balance" id = "myBalance" value = ""/>
+<input type="hidden" name="username" id = "name" value = ""/>
+<input type="hidden" name="logout" id = "logout" value = ""/>
+</form>
+
   </div>
 
 </body>
