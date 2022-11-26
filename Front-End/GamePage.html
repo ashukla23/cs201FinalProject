@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>CSCI 201 BlackJack!</title>
@@ -122,12 +122,12 @@
         var dealerCards = [];
         var message = "";
 
-        
+
         function connectToServer() {
             socket = new WebSocket("ws://localhost:12345/CSCI_201_FinalProject/ws");//might have to change the url(look in the websockets presentation)
             //change the url
             socket.onmessage = function (event) { //when we receive something  from the server
-                document.getElementById("test").innerHTML = "Received data from server "+event.data; 
+                document.getElementById("test").innerHTML = "Received data from server "+event.data;
                 message = event.data;
 
                 if (!isNaN(message)) {
@@ -139,14 +139,14 @@
                     if (message[1] == "L") { // server signals balance update
 
                     }
-                    else if (message[0] == "D") { // server signals dealer hand update -- dealer hand update will always be a set of multiple cards 
+                    else if (message[0] == "D") { // server signals dealer hand update -- dealer hand update will always be a set of multiple cards
                         var newcards = message.substring(1).split(1);
                         for (let i=0; i < cards.size(); i++) {
                             dealerCards.append(newcards[i]);
                             let image = document.createElement("img");
                             let currentCard = newcards[i];
                             image.src = "./images/" + currentCard + ".png";
-                            document.getElementById("card-player").append(image);
+                            document.getElementById("card-dealer").append(image);
                         }
 
 
@@ -155,6 +155,10 @@
                         var newcards = message.substring(1).split(",");
                         for (let i=0; i < cards.size(); i++) {
                             cards.append(newcards[i]);
+                            let image = document.createElement("img");
+                            let currentCard = newcards[i];
+                            image.src = "./images/" + currentCard + ".png";
+                            document.getElementById("card-player").append(image);
 
                         }
 
@@ -163,8 +167,14 @@
                     else if (message[0] == "W") { // server signals player win -- TODO
 
                     }
-                    else if (message[0] == "L") { // server signals player loss --  TODO 
+                    else if (message[0] == "L") { // server signals player loss --  TODO
 
+                    }
+                    else if (message[0] = "A") { // server signals player active -- TODO
+                    	makeActive();
+                    }
+                    else if (message[0] = "I") { // server signals player active -- TODO
+                    	makeInactive();
                     }
                 }
 
@@ -175,7 +185,7 @@
                 else {//must be the balance
                     //balance = event.data;
                 }
-                
+
                 //if we are getting a card, get its string representation and add it to the cards array
             }
         }
@@ -191,7 +201,8 @@
             element = document.getElementById("betting");
             element.hidden = true;
             buttons = document.getElementById("buttons");
-            buttons.hidden = false;
+            buttons.hidden = true;
+            makeInactive();
             return false;
         }
 
@@ -275,8 +286,22 @@
             }
         }
 
+        function makeActive() {
+            element = document.getElementById("waiting");
+            element.hidden = true;
+            buttons = document.getElementById("buttons");
+            buttons.hidden = false;
+        }
+
+        function makeInactive() {
+            element = document.getElementById("waiting");
+            element.hidden = false;
+            buttons = document.getElementById("buttons");
+            buttons.hidden = true;
+        }
+
         function gameSetup() {
-            overturned = deck.pop();
+/*             overturned = deck.pop();
             dealerScore += getPoints(overturned);
             while (dealerScore <= 17) {
                 let image = document.createElement("img");
@@ -292,7 +317,9 @@
                 image.src = "./images/" + yourCard + ".png";
                 playerScore += getValue(yourCard);
                 document.getElementById("card-player").append(image);
-            }
+            } */
+
+            connectToServer
 
 
             document.getElementById("hit").addEventListener("click", hit);
@@ -320,7 +347,7 @@
 
 
         function joinGame() {
-            socket.send("RU " + name); // send "R", onmessage will process client ID. 
+            socket.send("RU " + name); // send "R", onmessage will process client ID.
 
         }
 
@@ -342,6 +369,9 @@
         <div id="card-player">
         </div>
         <br />
+        <div id = "waiting" hidden="true">
+        	<h3>Waiting for other players...</h3>
+        </div>
         <div id = "buttons" hidden="true">
             <button id="hit" type="button" onclick="hit()">Hit</button>
             <button id="stay" type="button" onclick="stay()">Stay</button>
