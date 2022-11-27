@@ -117,69 +117,101 @@
         let isBetting = true;
         let isPlaying = false;
         var socket;
-        var serverID;
+        var serverID = "";
         const cards = [];//array of strings representing the cards i currently have(gotten from the server when it passes in new cards)
         var dealerCards = [];
         var message = "";
-        
+        var win = false;
+        var start = true;
+
+
         function connectToServer() {
-            socket = new WebSocket("ws://localhost:12345/CSCI_201_FinalProject/ws");//might have to change the url(look in the websockets presentation)
+            socket = new WebSocket("ws://localhost:8080/cs201_final_project/ws");//might have to change the url(look in the websockets presentation)
             //change the url
+            socket.onopen = function(event) {
+            	console.log("Connected!");
+            }
+
             socket.onmessage = function (event) { //when we receive something  from the server
-            	
-                document.getElementById("test").innerHTML = "Received data from server "+event.data; 
+                document.getElementById("test").innerHTML = "Received data from server "+event.data;
+            	console.log(event.data);
                 message = event.data;
+
                 if (!isNaN(message)) {
                     if (Number(message) >= 0 && Number(message) < 4) {
                         serverID = message;
-                        socket.send(serverID+ "L " +balance);//sends over the balance after I connect
-                        socket.send(serverID+ "U " +name);//sends over the username after I connect
-                        //alert("My ID is"+serverID);
+                        console.log("server id set");
                     }
                 }
                 else {
-                    if (message[0] == "D") { // server signals dealer hand update -- dealer hand update will always be a set of multiple cards 
-                    	
-                    	var newcard = message.substring(2);//message has structure "D 10-C"
-                    	//alert("Got dealer card "+newcard);
-                    	
-                    	 let image = document.createElement("img");
-                         image.src = "./images/" + newcard + ".png";
-                         //dealerScore += getPoints(newcard);
-                         document.getElementById("card-dealer").append(image);
+                    if (message[1] == "L") { // server signals balance update
+
+                    }
+                    else if (message[0] == "D") { // server signals dealer hand update -- dealer hand update will always be a set of multiple cards
+                        var newcards = message.substring(2).split(',');
+                        for (let i=0; i < newcards.length; i++) {
+                        	console.log("Pushing " + newcards[i]);
+                            dealerCards.push(newcards[i]);
+                            let image = document.createElement("img");
+                            let currentCard = newcards[i];
+                            image.src = "./images/" + currentCard + ".png";
+                            document.getElementById("card-dealer").append(image);
+                        }
 
 
                     }
                     else if (message[0] == "P") { // server signals player hand update
-                    	var newcard = message.substring(2);//message has structure "D 10-C"
-                    	//alert("Got dealer card "+newcard);
-                    	
-                    	 let image = document.createElement("img");
-                         image.src = "./images/" + newcard + ".png";
-                         //dealerScore += getPoints(newcard);
-                         document.getElementById("card-player").append(image);
+                        var newcards = message.substring(2).split(",");
+                        for (let i=0; i < newcards.length; i++) {
+                        	console.log("Pushing " + newcards[i]);
+                            cards.push(newcards[i]);
+                            let image = document.createElement("img");
+                            let currentCard = newcards[i];
+                            image.src = "./images/" + currentCard + ".png";
+                            document.getElementById("card-player").append(image);
+
+                        }
+
 
                     }
                     else if (message[0] == "W") { // server signals player win -- TODO
-                    	var newbalance = message.substring(2);
-                    	balance = newbalance;
-                    	alert("You Won :)")
-                    	endGame();
+						win=true;
+						makeInactive();
                     }
-                    else if (message[0] == "L") { // server signals player loss --  TODO 
-                    	
-                    	var newbalance = message.substring(2);
-                    	balance = newbalance;
-                    	alert("You Lost :(")
-                    	endGame();
+                    else if (message[0] == "L") { // server signals player loss --  TODO
+						win=false;
+						makeInactive();
                     }
-                    else if (message[0] = "A") { // server signals player active -- TODO
+                    else if (message[0] == "A") { // server signals player active -- TODO
                     	makeActive();
+                    	start = false;
                     }
-                    else if (message[0] = "I") { // server signals player active -- TODO
+                    else if (message[0] == "I") { // server signals player inactive -- TODO
                     	makeInactive();
                     }
+                    else if (message[0] == "N") {
+                    	alert("You've busted! You must stay. ");
+                    }
                 }
+
+                //will have to change this based on what we receive from the server
+                if (event.data.type == "string") {//if the type is a string
+
+                }
+                else {//must be the balance
+                    //balance = event.data;
+                }
+
+                //if we are getting a card, get its string representation and add it to the cards array
+
+
+                return false;
+            }
+
+            socket.onclose = function(event) {
+            	console.log(event.reason);
+            	console.log(event.code);
+            	console.log("closing");
             }
         }
 
@@ -189,7 +221,6 @@
         		endGame();
         	}
             var newBet = "" + myBet;
-            
             socket.send(serverID + "B " + newBet);
             document.getElementById("test").innerHTML = "Sent Bet";
             element = document.getElementById("betting");
@@ -200,6 +231,11 @@
             return false;
         }
 
+        function sendMessage(message) {
+        	socket.send(message);
+        	return false;
+        }
+
         function startPage() { //called when the page is started
             const myUrl = window.location.search;
         	const urlParams = new URLSearchParams(myUrl);
@@ -208,7 +244,6 @@
             connectToServer();
             document.getElementById("balance").innerHTML = "Balance: " + balance;
             document.getElementById("bet").innerHTML = "Bet: " + myBet;
-            
         }
         function bet(x) { //when the player bets a certain amount
             if (!isBetting) {
@@ -243,6 +278,9 @@
         function startPlaying() { //changes a couple of booleans to signify what state we are at now
             isBetting = false;
             isPlaying = true;
+
+          /*   connectToServer(); */
+
             return sendBet();
         }
         function endGame() {
@@ -253,11 +291,8 @@
         var dealerScore = 0;
         var playerScore = 0;
 
+        var overturned;
 
-        window.onload = function () {
-
-            //gameSetup();
-        }
 
         function getPoints(card) { // get number value of card
             let data = card.split("-");
@@ -279,6 +314,21 @@
             element.hidden = true;
             buttons = document.getElementById("buttons");
             buttons.hidden = false;
+            dealerheader = document.getElementById("dealerheader");
+            playerheader = document.getElementById("playerheader");
+            dealerheader.hidden = false;
+            playerheader.hidden = false;
+            nocards = document.getElementById("nocards");
+            nocards.hidden=true;
+            playercards = document.getElementById("card-player");
+            playercards.hidden=false;
+            dealercards = document.getElementById("card-dealer");
+            dealercards.hidden=false;
+            winMessage = document.getElementById("win");
+            lossMessage = document.getElementById("loss");
+            winMessage.hidden = true;
+            lossMessage.hidden=true;
+            console.log("Making active");
         }
 
         function makeInactive() {
@@ -286,52 +336,60 @@
             element.hidden = false;
             buttons = document.getElementById("buttons");
             buttons.hidden = true;
-        }
+            dealerheader = document.getElementById("dealerheader");
+            playerheader = document.getElementById("playerheader");
+            dealerheader.hidden = true;
+            playerheader.hidden = true;
+            nocards = document.getElementById("nocards");
 
-        function gameSetup() {
-/*             overturned = deck.pop();
-            dealerScore += getPoints(overturned);
-            while (dealerScore <= 17) {
-                let image = document.createElement("img");
-                let currentCard = deck.pop();
-                image.src = "./images/" + currentCard + ".png";
-                dealerScore += getPoints(currentCard);
-                document.getElementById("card-dealer").append(image);
+            playercards = document.getElementById("card-player");
+            playercards.hidden=true;
+            dealercards = document.getElementById("card-dealer");
+            dealercards.hidden=true;
+            winMessage = document.getElementById("win");
+            lossMessage = document.getElementById("loss");
+            if (start) {
+            	nocards.hidden=false;
+            }
+            else {
+            	nocards.hidden=true;
+	            if (win) {
+	            	winMessage.hidden = false;
+	            	lossMessage.hidden = true;
+	            }
+	            else {
+	            	winMessage.hidden = true;
+	            	lossMessage.hidden = false;
+	            }
             }
 
-            for (let i = 0; i < 2; i++) {
-                let image = document.createElement("img");
-                let yourCard = deck.pop();
-                image.src = "./images/" + yourCard + ".png";
-                playerScore += getValue(yourCard);
-                document.getElementById("card-player").append(image);
-            } */
-
-            connectToServer
-
-
-            document.getElementById("hit").addEventListener("click", hit);
-            document.getElementById("stay").addEventListener("click", stay);
+            document.getElementById("card-player") = "";
+            console.log("Making inactive");
         }
 
         function hit() {
-            socket.send(serverID + "H");
+            sendMessage(serverID + "H");
+            console.log("transmitting hit request");
             if (playerScore > 21) {
                 return;
             }
-            
+
+
+
+
+
         }
 
         function stay() {
-            socket.send(serverID + "S");
-            //document.getElementById("hidden").src = "./images/" + overturned + ".png";
-            //document.getElementById("dealer-sum").innerText = dealerSum;
-            //document.getElementById("your-sum").innerText = yourSum;
+            sendMessage(serverID + "S");
+/*             document.getElementById("hidden").src = "./images/" + overturned + ".png";
+            document.getElementById("dealer-sum").innerText = dealerSum;
+            document.getElementById("your-sum").innerText = yourSum; */
         }
 
 
         function joinGame() {
-            socket.send("RU " + name); // send "R", onmessage will process client ID.
+            socket.sendMessage("RU " + name); // send "R", onmessage will process client ID.
 
         }
 
@@ -344,13 +402,25 @@
         <br />
         <br />
         <!-- Card images from https://code.google.com/archive/p/vector-playing-cards/ -->
-        <h3>Dealer Cards: </h3>
+        <div id="dealerheader" hidden="true">
+        	<h3>Dealer Cards: </h3>
+        </div>
         <div id="card-dealer">
-            
         </div>
         <br />
-        <h3>Player Cards: </h3>
+        <div id="playerheader" hidden="true">
+        	<h3>Player Cards: </h3>
+        </div>
         <div id="card-player">
+        </div>
+        <div id="nocards" hidden="true">
+        	<h4>Get your fortune ready... your turn will come soon!</h4>
+        </div>
+        <div id="win" hidden="true">
+        	<h4>You won the last round! Let's keep this lucky streak going!</h4>
+        </div>
+        <div id="loss" hidden="true">
+        	<h4>You lost the last round :( better luck next round!</h4>
         </div>
         <br />
         <div id = "waiting" hidden="true">

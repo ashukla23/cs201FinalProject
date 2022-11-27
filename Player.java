@@ -1,9 +1,10 @@
-package csci201_finalProject;
+package cs201_final_project;
 
-import java.text.ParseException;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
-import javax.websocket.*;
+
+import javax.websocket.RemoteEndpoint;
+import javax.websocket.Session;
 
 
 
@@ -11,40 +12,21 @@ public class Player
 {
 
 	// MEMBERS
-<<<<<<< HEAD
-	private Session _session;
-	private int _id = 0;
-	private String _username;
-	private int _balance = 0;
-	private int _bet = 0;
-	private List<Card> _hand;
-	private int _handValue = 0;
-	private String _winResult;
-	
-	
-	
-	
-=======
 	private Session _session = null;
-	private int _id;
+	private static int _id;
 	private String _username = null;
-	private int _balance;
-	private int _bet;
-	private ArrayList<String> _hand;
-	private int _handValue;
+	private static int _balance;
+	private static int _bet;
+	private static ArrayList<String> _hand;
+	private static int _handValue;
 	private String _winResult = null;
-	private bool playerActive = false;
+	private boolean playerActive = false;
+	RemoteEndpoint.Async basicRemote = null;
 
 
 
 
->>>>>>> 88daae0ca46a76118b8b2120ed5da758499519b7
 	// CONSTRUCTOR
-	public Player(Session session, int id) {
-		_session = session;
-		_id = id;
-		_hand = new ArrayList<Card>();
-	}
 	public Player(Session session, int id, String username, int balance)
 	{
 		_session = session;
@@ -55,39 +37,30 @@ public class Player
 		_hand = new ArrayList<String>();
 		_handValue = 0;
 		_winResult = "";
+		basicRemote = _session.getAsyncRemote();
 	}
-<<<<<<< HEAD
-	
-	public void setBalance(int balance) {
-		_balance = balance;
-	}
-	
-=======
 
+	// another constructor
 	public Player(Session session)
 	{
 		_session = session;
+		_id = -1;
+		_username = "";
+		_balance = 0;
+		_bet = 0;
+		_hand = new ArrayList<String>();
+		_handValue = 0;
+		_winResult = "";
+		basicRemote = _session.getAsyncRemote();
 	}
 
 
 
->>>>>>> 88daae0ca46a76118b8b2120ed5da758499519b7
 	// called by server, set player's bet for the round
 	public void setBet(int bet)
 	{
 		_bet = bet;
 	}
-<<<<<<< HEAD
-	
-	public Session getSession() {
-		return _session;
-	}
-	
-	
-	
-	// called by server, player has requested to hit, add card to player's hand 
-	public void receiveCard(Card card)
-=======
 
 	public void setUsername(String username)
 	{
@@ -95,47 +68,40 @@ public class Player
 	}
 
 	public void addToHand(String card) {
+
+		System.out.println("4");
 		_hand.add(card);
+		System.out.println("5");
+		sendMessage("P " + card);
+		updateHandValue();
 	}
 
 	public void resetHand() {
 		_hand.clear();
 	}
 
-	public List<String> getHand() {
+	public static ArrayList<String> getHand() {
 		return _hand;
 	}
 
 
 	// called by server, player has requested to hit, add card to player's hand
 	public void receiveCard(String card)
->>>>>>> 88daae0ca46a76118b8b2120ed5da758499519b7
 	{
 		_hand.add(card);
-		_handValue = getHandValue();
+		updateHandValue();
 	}
-<<<<<<< HEAD
-	
-	public void setUsername(String name) {
-		_username = name;
-	}
-	
-	
-=======
 
 
 
 
->>>>>>> 88daae0ca46a76118b8b2120ed5da758499519b7
 	// called by server upon round completion
 	// ties mean dealer wins
 	public void finishRound(int dealerScore)
 	{
 		if(_handValue > 21) {
-			System.out.println("balance: "+_balance);
 			_balance -= _bet;
 			_winResult = "L";
-			System.out.println("balance: "+_balance);
 		}
 		else if(dealerScore > 21) {
 			_balance += _bet;
@@ -160,40 +126,48 @@ public class Player
 	// return format example (id=1, loss, balance of 50): "1,L,50"
 	public String sendInfo()
 	{
-		return "" + _winResult + " " + _balance;
+		return _id + "," + _winResult + "," + _balance;
 	}
 
 
 
 
 	// get value of hand
-	public int getHandValue()
+	private static void updateHandValue()
 	{
 		// get initial total
 		int total = 0;
 		int aces = 0;
-		for(String card : _hand) {
+
+		System.out.println("A");
+		for(int i=0; i < _hand.size(); i++) {
+
+			String card = _hand.get(i);
 			String[] values = card.split("-");
 			int value;
+			System.out.println("B");
 
+			System.out.println(card.charAt(0));
 
-			if (values[0] == "A") {
-				value = 10;
+			if (card.charAt(0) == 'A') {
+				value = 11;
+				aces++;
+				System.out.println("E");
 			}
-			else if (values[0] == "K" || values[0] == "Q" || values[0] == "J") {
+			else if (card.charAt(0) == 'K' || card.charAt(0) == 'Q' || card.charAt(0) == 'J') {
 				value = 10;
+				System.out.println("F");
 			}
 			else {
 				value = Integer.parseInt(values[0]);
+				System.out.println("G");
 			}
 			total += value;
-			if(values[0].equals("A")) {
-				aces++;
-			}
 		}
 
 		// if we've bust, try to reduce ace values from 11 to 1
 		while(total > 21) {
+			System.out.println("D");
 			if(aces > 0) {
 				total -= 10;
 				aces--;
@@ -204,33 +178,117 @@ public class Player
 		}
 
 		// return
-		return total;
+		System.out.println("C");
+		_handValue = total;
 	}
 
-	public void hit(String card) {
-		_session.send("P " + card);
+	public void setBalance(int balance) {
+		_balance = balance;
+	}
+
+	static void snooze(int ms) {
+	    try {
+	        System.out.printf("Sleeping...");
+	        Thread.sleep(ms);
+	        } catch (InterruptedException e) {
+	            System.out.printf("Exception caught");
+	            }
 
 	}
 
-	public void stay() {
-		_session.send("I");
+	public void sendMessage(String message) {
+
+
+		boolean bWriteSucceeded = false;
+		System.out.println("6");
+	    if (_session.isOpen()) {
+	    	System.out.println("7");
+	        for (int i = 0; i < 10 && !bWriteSucceeded; i++) {
+	            // Crap. Sometimes getting this:
+				// The remote endpoint was in state [TEXT_FULL_WRITING] which is an invalid
+				// state for called method
+	        	System.out.println("9");
+	        	System.out.println("trying to send message: " + message);
+	        	try {
+	        		basicRemote.sendText(message);
+	        	}
+	        	catch (IllegalStateException ise) {
+
+	        	}
+				System.out.println("sent message: " + message);
+				bWriteSucceeded = true;
+	        }
+	    }
+	    System.out.println("8");
 
 	}
 
-	public void activate() {
-		_session.send("A");
+	public int getBalance() {
+		return _balance;
 	}
 
-	public void isActive() {
+	public void hit(String card) throws IOException {
+		updateHandValue();
+		if (_handValue < 21) {
+			sendMessage("P " + card);
+			_hand.add(card);
+		}
+		else {
+			sendMessage("N");
+		}
+
+	}
+
+	public void stay() throws IOException {
+		updateHandValue();
+		if (_handValue <= 21) {
+			sendMessage("W");
+		}
+		else {
+			sendMessage("L");
+		}
+		markInactive();
+
+	}
+
+	public void activate() throws IOException {
+		markActive();
+		System.out.println("Sending message Player activate");
+		sendMessage("A");
+	}
+
+	public void deactivate() throws IOException {
+		markInactive();
+		System.out.println("Sending message Player activate");
+		sendMessage("E");
+	}
+
+	public boolean isActive() {
 		return playerActive;
 	}
 
-	public void toggleActive() {
-		playerActive = !playerActive;
+	public void markActive() {
+		playerActive = true;
+		System.out.println("Player active status is: " + playerActive);
+	}
+
+	public void markInactive() {
+		playerActive = false;
+		System.out.println("Player active status is: " + playerActive);
 	}
 
 	public void startRound() {
 
+	}
+
+	public Session getSession() {
+		// TODO Auto-generated method stub
+		return _session;
+	}
+
+	public void clearHand() {
+		_hand.clear();
+		_handValue = 0;
 	}
 
 

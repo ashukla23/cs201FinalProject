@@ -1,129 +1,44 @@
-package csci201_finalProject;
+package cs201_final_project;
 
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Vector;
-import javax.websocket.*; // for space
+
+// for space
+import javax.websocket.OnClose;
+import javax.websocket.OnError;
+import javax.websocket.OnMessage;
+import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
-import java.util.*;
-
-import org.apache.jasper.tagplugins.jstl.core.Remove;
 
 
 
 @ServerEndpoint (value="/ws")//don't change this
 public class ServerClass extends Thread {
-<<<<<<< HEAD
-	
-	private static Deck myDeck = new Deck();
-	private int connections = 0;
-	private int dealerScore = 0;
-	//private Card card1 = myDeck.getCard();//my dealer cards
-	//private Card card2 = myDeck.getCard();
+
+	private static int connections;
 	volatile private boolean inGame;
 	private boolean gettingBets;
 	private static Vector<Player> players = new Vector<Player>();
-	private static Vector<Player> waitingPlayers = new Vector<Player>();
-	private static List<Card> dealer_hand = new ArrayList<Card>();
-	
-	
-	//for web Sockets connections/we don't have to use serverthreads
-	public ServerClass() {
-		System.out.println("Created Server");
-		if(dealer_hand.size() == 0) {//if I have no cards
-			for(int i = 0; i< 2; i++) {
-				dealer_hand.add(myDeck.getCard());//creates hand for the dealer
-			}
-			dealerScore = getHandValue();
-			if(dealerScore < 10) {
-				dealer_hand.add(myDeck.getCard());
-				dealerScore = getHandValue();
-			}
-		}
-		
-	}
-	
-	private int getHandValue()
-	{
-		// get initial total
-		int total = 0;
-		int aces = 0;
-		for(Card card : dealer_hand) {
-			total += card.getValue();
-			if(card.getNumber().equals("A")) {
-				aces++;
-			}
-		}
-		
-		// if we've bust, try to reduce ace values from 11 to 1
-		while(total > 21) {
-			if(aces > 0) {
-				total -= 10;
-				aces--;
-			}
-			else {
-				break;
-			}
-		}
-		
-		// return
-		return total;
-	}
-	
-	
-	@OnOpen
-	public void open(Session session) {
-		System.out.println("Connection made");
-		System.out.println(connections);
-		Player temp = new Player(session, connections);
-		if(connections<4) {
-			connections++;
-			players.add(temp);
-			System.out.println(players.size());
-			System.out.println("Created Player");
-		}
-		else {
-			waitingPlayers.add(temp);
-		}
-		
-		try {
-			session.getBasicRemote().sendText(""+(connections-1));
-			
-			for(Card card: dealer_hand) {
-				session.getBasicRemote().sendText("D "+card.getNumber()+"-"+card.getSuit());
-			}
-			
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		//session.sendText(connections);
-=======
-
-	private int connections;
-	volatile private boolean inGame;
-	private boolean gettingBets;
-	private ArrayList<Player> players = new ArrayList<Player>();
 	private ArrayList<Player> waitingPlayers = new ArrayList<Player>();
-	private String[] allCards = new String[]{"A-C", "A-D", "A-H", "A-S", "2-C", "2-D", "2-H", "2-S", "3-C", "3-D", "3-H", "3-S", "4-C", "4-D", "4-H", "4-S",
+	private static String[] allCards = new String[]{"A-C", "A-D", "A-H", "A-S", "2-C", "2-D", "2-H", "2-S", "3-C", "3-D", "3-H", "3-S", "4-C", "4-D", "4-H", "4-S",
             "5-C", "5-D", "5-H", "5-S", "6-C", "6-D", "6-H", "6-S", "7-C", "7-D", "7-H", "7-S", "8-C", "8-D", "8-H", "8-S",
             "9-C", "9-D", "9-H", "9-S", "10-C", "10-D", "10-H", "10-S", "J-C", "J-D", "J-H", "J-S", "K-C", "K-D", "K-H", "K-S",
             "Q-C", "Q-D", "Q-H", "Q-S"};
-	private ArrayList<String> deck = Arrays.asList(allCards);
+	private static Vector<String> deck = new Vector<String>(Arrays.asList(allCards));
 
-	private ArrayList<String> dealerHand = new ArrayList<String>();
+	private static ArrayList<String> dealerHand = new ArrayList<String>();
 	private int currentPlayerIndex = 0;
+	private static int numBets = 0;
+
+	private static boolean started = false;
 
 
 
-	//Synchronised list of client threads
+	//Synchronized list of client threads
 	/*List<ServerThread> players = Collections.synchronizedList(new ArrayList<ServerThread>());
 	List<ServerThread> waitingPlayers = Collections.synchronizedList(new ArrayList<ServerThread>());*/
 
@@ -134,129 +49,106 @@ public class ServerClass extends Thread {
 
 
 	@OnOpen
-	public void open(Session session) {
+	public void open(Session session) throws IOException {
 		//System.out.println("Connection made");
 		Player temp = new Player(session);
 
 		players.add(temp);
 
+		System.out.println("New player added, player vector size is now " + String.valueOf(players.size()));
 
 
 
-		if(!this.isAlive()) {
-			this.start();
-			players.add(temp);
-		} else {
 
-			if(connections < 3) {
-				connections++;
 
-				if(gettingBets) {
-					players.add(temp);
-				} else {
-
-					waitingPlayers.add(temp);
-
-				}
-			}
-		}
 
 		// send the frontend its reference ID to store.
 
-		session.getBasicRemote().sendText(connections);
+		temp.sendMessage(String.valueOf(players.size()-1));
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("After message send");
 
-		// set up the player's starting hand
-		String card = deck.remove();
-		temp.addToHand(card);
-		session.send("P " + card);
-		card = deck.remove();
-		temp.addToHand(deck.remove());
-		session.send("P" + card);
+		if(started == false) {
+			this.start();
+			started = true;
+			System.out.println("Started");
+			connections++;
+		} else {
 
-
-		// send the player's starting hand to the frontend to display (done above)
-
-//		session.send();
-
-		// set up the dealer's starting hand. (Done on open)
-
-		// send the dealer's starting hand to the frontend to display
-
-		for (int i=0; i < dealerHand.size(); i++) {
-			session.send("D " + dealerHand.get(i));
+			if(connections < 4) {
+				connections++;
+			}
 		}
 
 
->>>>>>> 88daae0ca46a76118b8b2120ed5da758499519b7
 	}
 
 	@OnMessage
 	public void message(String message, Session session) {
+		System.out.println("Received message");
 		System.out.println(message);
 		try {
-<<<<<<< HEAD
-			int index = Integer.parseInt(message.substring(0, 1));
-			Player temp = players.get(index);
-			String commandLine = message.substring(1);
-			String command = commandLine.substring(0, 1);
-			if(command.equals("L")) {//getting balance
-				int balance = Integer.parseInt(commandLine.substring(2));
-				temp.setBalance(balance);
-			} else if(command.equals("B")) {//getting bet
-				int bet = Integer.parseInt(commandLine.substring(2));
-				temp.setBet(bet);
-			} else if(command.equals("U")) {//getting username
-				String username = message.substring(2);
-				temp.setUsername(username);
-				
-=======
 
 			int index = Integer.parseInt(message.substring(0, 1));
-			Player temp = players.get(index);
+
 
 			String command = message.substring(1, 2);
 
+			System.out.println("Command is " + command);
+
+			Player temp = players.get(index);
+
 			if(command.equals("L")) {
 
-			} else if(command.equals("B")) {
-				int balance = Integer.parseInt(message.substring(2));
-				temp.setBalance(balance);
+			}
+			else if(command.equals("B")) {
+				System.out.println("Received Bet of: " + message.substring(2));
+				numBets++;
+				int balance = Integer.parseInt(message.substring(3));
+				temp.setBet(balance);
+				// set up the player's starting hand
+				String card = deck.remove(0);
+				System.out.println(card);
+				System.out.println("2");
+				temp.addToHand(card);
+				System.out.println("3");
+				card = deck.remove(0);
+				temp.addToHand(card);
+
+
+
+				// send the player's starting hand to the frontend to display (done above)
+
+//				session.send();
+
+				// set up the dealer's starting hand. (Done on open)
+
+				// send the dealer's starting hand to the frontend to display
+
+				for (int i=0; i < dealerHand.size(); i++) {
+					temp.sendMessage("D " + dealerHand.get(i));
+				}
 
 			} else if(command.equals("U")) {
-				int bet = Integer.parseInt(message.substring(2));
+				int bet = Integer.parseInt(message.substring(3));
 				temp.setBalance(bet);
 
->>>>>>> 88daae0ca46a76118b8b2120ed5da758499519b7
 			} else if(command.equals("R")) {
 				// sets username upon player join
-				String username = message.substring(2);
+				String username = message.substring(3);
 
 			} else if(command.equals("H")) {
-<<<<<<< HEAD
-				Card newCard = myDeck.getCard();
-				session.getBasicRemote().sendText("P "+newCard.getNumber()+"-"+newCard.getSuit());
-				temp.receiveCard(newCard);//gives the player a card from the deck
-				if(temp.getHandValue() > 21) {
-					System.out.println("dealer score: "+dealerScore);
-					temp.finishRound(dealerScore);
-					session.getBasicRemote().sendText(temp.sendInfo());
-				}
-				
-			} else if(command.equals("S")) {
-				temp.finishRound(dealerScore);
-				session.getBasicRemote().sendText(temp.sendInfo());
-				
-			}
-			
-			
-=======
 				temp.hit(deck.remove(0));
 				// write hit function in player class
 
 			} else if(command.equals("S")) {
 				temp.stay();
-				temp.toggleActive();
-				currentPlayerIndex++;
+
 				// write stay function in player class
 
 			}/* else if(command.equals("C")) {
@@ -264,23 +156,21 @@ public class ServerClass extends Thread {
 			}*/
 
 
->>>>>>> 88daae0ca46a76118b8b2120ed5da758499519b7
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
 		}
+
+
 	}
 
 	@OnClose
-	public void close(Session session) {
-<<<<<<< HEAD
-		System.out.println("Disconnecting");
-		
-=======
+	public void close(Session session) throws IOException {
 		//System.out.println("Disconnecting");
 
->>>>>>> 88daae0ca46a76118b8b2120ed5da758499519b7
 		//mySessions.remove(session);
+
+		System.out.println("Session closed");
 
 		//Remove from players
 		for(int i = 0; i < players.size(); i++) {
@@ -299,38 +189,92 @@ public class ServerClass extends Thread {
 	}
 
 
+	@Override
 	public void run() {
-		/*connections = 0;
+		System.out.println("Running!");
+		connections = 0;
 		inGame = true;
 
 		dealerHand.add(deck.remove(0));
 		dealerHand.add(deck.remove(0));
 
-
-
-		while(inGame) {
-			//betting
-			gettingBets = true;
-
-
-			players.addAll(waitingPlayers);
-			waitingPlayers.removeAllElements();
-
-			for(int i = 0; i < players.size(); i++) {
-				players.get(i).bet();
+		while (numBets != players.size()) {
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+			System.out.println("Waiting... numbets is " + String.valueOf(numBets) + " while players length is " + String.valueOf(players.size()));
+		}
 
-			int betsMade = 0;
-			while(betsMade < players.size()) {
-				betsMade = 0;
-				for(int i = 0; i < players.size(); i++) {
-					if(players.get(i).betting()) {
-						betsMade++;
+		int activeplayer = 0;
+
+		Player active = players.get(activeplayer);
+		try {
+			active.activate();
+			System.out.println("Marking player " + String.valueOf(activeplayer) + "Active");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		while(true) {
+			if (!active.isActive()) {
+				if (activeplayer + 1 >= players.size()) {
+					activeplayer = 0;
+
+				}
+				else {
+					active.clearHand();
+					activeplayer++;
+					System.out.println("Hand cleared");
+				}
+				active = players.get(activeplayer);
+				try {
+					active.activate();
+					if (active.getHand().isEmpty()) {
+						String card = deck.remove(0);
+						System.out.println(card);
+						System.out.println("2");
+						active.addToHand(card);
+						System.out.println("3");
+						card = deck.remove(0);
+						active.addToHand(card);
 					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
+		}
 
-			gettingBets = false;
+
+
+
+//		while(inGame) {
+//			//betting
+//			gettingBets = true;
+//
+//
+//			players.addAll(waitingPlayers);
+//			waitingPlayers.removeAllElements();
+//
+//			for(int i = 0; i < players.size(); i++) {
+//				players.get(i).bet();
+//			}
+//
+//			int betsMade = 0;
+//			while(betsMade < players.size()) {
+//				betsMade = 0;
+//				for(int i = 0; i < players.size(); i++) {
+//					if(players.get(i).betting()) {
+//						betsMade++;
+//					}
+//				}
+//			}
+
+
 
 
 
@@ -340,19 +284,48 @@ public class ServerClass extends Thread {
 
 
 			//loop through all the players until they are done playing
-			int playersDone = 0;
 
-			Player currentPlayer = players.get(currentPlayerIndex);
-			currentPlayer.toggleActive();
-			while (currentPlayer.isActive()) {
-				currentPlayer = players.get(currentPlayerIndex);
-				if (!currentPlayer.isActive()) {
-					currentPlayer.activate();
-				}
-			}
 
-			while(playersDone < players.size()) {
-				playersDone = 0;
+//			try {
+//				Thread.sleep(10000);
+//			} catch (InterruptedException e2) {
+//				// TODO Auto-generated catch block
+//				e2.printStackTrace();
+//			}
+
+//			System.out.println("Current player: " + activeplayer);
+//			System.out.println("Player count: " + players.size());
+
+
+
+
+
+//	udnidnede		try {
+//				Thread.sleep(10000);
+//			} catch (InterruptedException e2) {
+//				// TODO Auto-generated catch block
+//				e2.printStackTrace();
+//			}euiniuen
+
+
+//		byubhbu	try {
+//				currentPlayer.activate();
+//			} catch (IOException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			}
+//
+//			while (currentPlayer.isActive()) {
+//				if (!currentPlayer.isActive()) {
+//					try {
+//						currentPlayer.activate();
+//					} catch (IOException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+//				}
+//			}bhibib
+
 
 //				for(int i = 0; i < players.size(); i++) {
 //					// set up a round where a turn is activated for the player. Then it becomes deactivated.
@@ -367,30 +340,24 @@ public class ServerClass extends Thread {
 //						}
 //					}
 //				}
-			}
+
 
 
 			//check player win/loss and reset the player threads
-			for(int i = 0; i < players.size(); i++) {
-				if(players.get(i).getSum() >= dealerSum && players.get(i).getSum() <= 21) {
-					players.get(i).win();
-				} else {
-					players.get(i).loss();
-				}
-			}
-<<<<<<< HEAD
-			
-			
-		}*/
-=======
+//			for(int i = 0; i < players.size(); i++) {
+//				if(players.get(i).getSum() >= dealerSum && players.get(i).getSum() <= 21) {
+//					players.get(i).win();
+//				} else {
+//					players.get(i).loss();
+//				}
+//			}
 
 
 		}
->>>>>>> 88daae0ca46a76118b8b2120ed5da758499519b7
 	}
 
 
-}
+
 
 
 
@@ -600,5 +567,3 @@ public class ServerClass extends Thread {
 		}
 	}
 }*/
-
-
