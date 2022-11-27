@@ -9,18 +9,23 @@ public class Player
 	
 	// MEMBERS
 	private Session _session;
-	private int _id;
+	private int _id = 0;
 	private String _username;
-	private int _balance;
-	private int _bet;
+	private int _balance = 0;
+	private int _bet = 0;
 	private List<Card> _hand;
-	private int _handValue;
+	private int _handValue = 0;
 	private String _winResult;
 	
 	
 	
 	
 	// CONSTRUCTOR
+	public Player(Session session, int id) {
+		_session = session;
+		_id = id;
+		_hand = new ArrayList<Card>();
+	}
 	public Player(Session session, int id, String username, int balance)
 	{
 		_session = session;
@@ -33,12 +38,18 @@ public class Player
 		_winResult = "";
 	}
 	
-	
+	public void setBalance(int balance) {
+		_balance = balance;
+	}
 	
 	// called by server, set player's bet for the round
 	public void setBet(int bet)
 	{
 		_bet = bet;
+	}
+	
+	public Session getSession() {
+		return _session;
 	}
 	
 	
@@ -50,7 +61,9 @@ public class Player
 		_handValue = getHandValue();
 	}
 	
-	
+	public void setUsername(String name) {
+		_username = name;
+	}
 	
 	
 	// called by server upon round completion
@@ -58,8 +71,10 @@ public class Player
 	public void finishRound(int dealerScore)
 	{
 		if(_handValue > 21) {
+			System.out.println("balance: "+_balance);
 			_balance -= _bet;
 			_winResult = "L";
+			System.out.println("balance: "+_balance);
 		}
 		else if(dealerScore > 21) {
 			_balance += _bet;
@@ -84,14 +99,14 @@ public class Player
 	// return format example (id=1, loss, balance of 50): "1,L,50"
 	public String sendInfo()
 	{
-		return _id + "," + _winResult + "," + _balance;
+		return "" + _winResult + " " + _balance;
 	}
 	
 	
 	
 	
 	// get value of hand
-	private int getHandValue()
+	public int getHandValue()
 	{
 		// get initial total
 		int total = 0;
