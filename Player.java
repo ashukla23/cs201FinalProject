@@ -1,3 +1,6 @@
+package csci201_finalProject;
+
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.websocket.*;
@@ -6,8 +9,9 @@ import javax.websocket.*;
 
 public class Player
 {
-	
+
 	// MEMBERS
+<<<<<<< HEAD
 	private Session _session;
 	private int _id = 0;
 	private String _username;
@@ -20,6 +24,21 @@ public class Player
 	
 	
 	
+=======
+	private Session _session = null;
+	private int _id;
+	private String _username = null;
+	private int _balance;
+	private int _bet;
+	private ArrayList<String> _hand;
+	private int _handValue;
+	private String _winResult = null;
+	private bool playerActive = false;
+
+
+
+
+>>>>>>> 88daae0ca46a76118b8b2120ed5da758499519b7
 	// CONSTRUCTOR
 	public Player(Session session, int id) {
 		_session = session;
@@ -33,20 +52,32 @@ public class Player
 		_username = username;
 		_balance = balance;
 		_bet = 0;
-		_hand = new ArrayList<Card>();
+		_hand = new ArrayList<String>();
 		_handValue = 0;
 		_winResult = "";
 	}
+<<<<<<< HEAD
 	
 	public void setBalance(int balance) {
 		_balance = balance;
 	}
 	
+=======
+
+	public Player(Session session)
+	{
+		_session = session;
+	}
+
+
+
+>>>>>>> 88daae0ca46a76118b8b2120ed5da758499519b7
 	// called by server, set player's bet for the round
 	public void setBet(int bet)
 	{
 		_bet = bet;
 	}
+<<<<<<< HEAD
 	
 	public Session getSession() {
 		return _session;
@@ -56,16 +87,46 @@ public class Player
 	
 	// called by server, player has requested to hit, add card to player's hand 
 	public void receiveCard(Card card)
+=======
+
+	public void setUsername(String username)
+	{
+		_username = username;
+	}
+
+	public void addToHand(String card) {
+		_hand.add(card);
+	}
+
+	public void resetHand() {
+		_hand.clear();
+	}
+
+	public List<String> getHand() {
+		return _hand;
+	}
+
+
+	// called by server, player has requested to hit, add card to player's hand
+	public void receiveCard(String card)
+>>>>>>> 88daae0ca46a76118b8b2120ed5da758499519b7
 	{
 		_hand.add(card);
 		_handValue = getHandValue();
 	}
+<<<<<<< HEAD
 	
 	public void setUsername(String name) {
 		_username = name;
 	}
 	
 	
+=======
+
+
+
+
+>>>>>>> 88daae0ca46a76118b8b2120ed5da758499519b7
 	// called by server upon round completion
 	// ties mean dealer wins
 	public void finishRound(int dealerScore)
@@ -91,9 +152,9 @@ public class Player
 		_hand.clear();
 		_bet = 0;
 	}
-	
-	
-	
+
+
+
 	// called by server, returns the win result and updated balance in string form
 	// return format example (id=2, win, balance of 100): "2,W,100"
 	// return format example (id=1, loss, balance of 50): "1,L,50"
@@ -101,23 +162,36 @@ public class Player
 	{
 		return "" + _winResult + " " + _balance;
 	}
-	
-	
-	
-	
+
+
+
+
 	// get value of hand
 	public int getHandValue()
 	{
 		// get initial total
 		int total = 0;
 		int aces = 0;
-		for(Card card : _hand) {
-			total += card.getValue();
-			if(card.getNumber().equals("A")) {
+		for(String card : _hand) {
+			String[] values = card.split("-");
+			int value;
+
+
+			if (values[0] == "A") {
+				value = 10;
+			}
+			else if (values[0] == "K" || values[0] == "Q" || values[0] == "J") {
+				value = 10;
+			}
+			else {
+				value = Integer.parseInt(values[0]);
+			}
+			total += value;
+			if(values[0].equals("A")) {
 				aces++;
 			}
 		}
-		
+
 		// if we've bust, try to reduce ace values from 11 to 1
 		while(total > 21) {
 			if(aces > 0) {
@@ -128,9 +202,35 @@ public class Player
 				break;
 			}
 		}
-		
+
 		// return
 		return total;
+	}
+
+	public void hit(String card) {
+		_session.send("P " + card);
+
+	}
+
+	public void stay() {
+		_session.send("I");
+
+	}
+
+	public void activate() {
+		_session.send("A");
+	}
+
+	public void isActive() {
+		return playerActive;
+	}
+
+	public void toggleActive() {
+		playerActive = !playerActive;
+	}
+
+	public void startRound() {
+
 	}
 
 

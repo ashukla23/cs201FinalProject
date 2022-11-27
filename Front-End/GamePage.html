@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>CSCI 201 BlackJack!</title>
@@ -173,6 +173,12 @@
                     	alert("You Lost :(")
                     	endGame();
                     }
+                    else if (message[0] = "A") { // server signals player active -- TODO
+                    	makeActive();
+                    }
+                    else if (message[0] = "I") { // server signals player active -- TODO
+                    	makeInactive();
+                    }
                 }
             }
         }
@@ -189,7 +195,8 @@
             element = document.getElementById("betting");
             element.hidden = true;
             buttons = document.getElementById("buttons");
-            buttons.hidden = false;
+            buttons.hidden = true;
+            makeInactive();
             return false;
         }
 
@@ -267,8 +274,22 @@
             }
         }
 
+        function makeActive() {
+            element = document.getElementById("waiting");
+            element.hidden = true;
+            buttons = document.getElementById("buttons");
+            buttons.hidden = false;
+        }
+
+        function makeInactive() {
+            element = document.getElementById("waiting");
+            element.hidden = false;
+            buttons = document.getElementById("buttons");
+            buttons.hidden = true;
+        }
+
         function gameSetup() {
-            overturned = deck.pop();
+/*             overturned = deck.pop();
             dealerScore += getPoints(overturned);
             while (dealerScore <= 17) {
                 let image = document.createElement("img");
@@ -284,7 +305,9 @@
                 image.src = "./images/" + yourCard + ".png";
                 playerScore += getValue(yourCard);
                 document.getElementById("card-player").append(image);
-            }
+            } */
+
+            connectToServer
 
 
             document.getElementById("hit").addEventListener("click", hit);
@@ -308,7 +331,7 @@
 
 
         function joinGame() {
-            socket.send("RU " + name); // send "R", onmessage will process client ID. 
+            socket.send("RU " + name); // send "R", onmessage will process client ID.
 
         }
 
@@ -330,6 +353,9 @@
         <div id="card-player">
         </div>
         <br />
+        <div id = "waiting" hidden="true">
+        	<h3>Waiting for other players...</h3>
+        </div>
         <div id = "buttons" hidden="true">
             <button id="hit" type="button" onclick="hit()">Hit</button>
             <button id="stay" type="button" onclick="stay()">Stay</button>
